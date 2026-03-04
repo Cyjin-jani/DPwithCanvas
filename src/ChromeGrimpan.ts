@@ -1,16 +1,13 @@
-// ! 다른 곳에서 new ChromeGrimpan(document.querySelector('#canvas'))등 별도 인스턴스를 만들어 사용하지 못하도록 하기 위해 private으로 처리함.
-class ChromeGrimpan {
+import AbstractGrimpan from './Factory/AbstractGrimpan';
+
+class ChromeGrimpan extends AbstractGrimpan {
+  // 다른 곳에서 new ChromeGrimpan(document.querySelector('#canvas'))등 별도 인스턴스를 만들어 사용하지 못하도록 하기 위해 private으로 처리함
   private static instance: ChromeGrimpan;
-  private constructor(canvas: HTMLCanvasElement | null) {
-    if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
-      throw new Error('canvas 엘레먼트를 넣어주세요.');
-    }
-  }
 
   initialize() {}
   initializeMenu() {}
 
-  static getInstance() {
+  static override getInstance() {
     if (!this.instance) {
       this.instance = new ChromeGrimpan(document.querySelector('#canvas'));
     }
