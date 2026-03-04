@@ -4,7 +4,6 @@ class IEGrimpan extends AbstractGrimpan {
   private static instance: IEGrimpan;
 
   initialize() {}
-  initializeMenu() {}
 
   static override getInstance() {
     if (!this.instance) {

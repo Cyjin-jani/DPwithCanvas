@@ -1,6 +1,4 @@
-import ChromeGrimpan from './ChromeGrimpan';
-import AbstractGrimpanFactory from './Factory/AbstractGrimpanFactory';
-import IEGrimpan from './IEGrimpan';
+import { ChromeGrimpanFactory } from './Factory/GrimpanFactory';
 
 // simple factory pattern
 /**
@@ -40,18 +38,17 @@ import IEGrimpan from './IEGrimpan';
  */
 
 // 따라서, 다음과 같이 팩토리 패턴을 사용할 수 있음
-// 보통은 따로 파일을 분리하지만, 일단 여기서 임시적으로 사용.
-class ChromeGrimpanFactory extends AbstractGrimpanFactory {
-  static override createGrimpan() {
-    return ChromeGrimpan.getInstance();
-  }
-}
+// class ChromeGrimpanFactory extends AbstractGrimpanFactory {
+//   static override createGrimpan() {
+//     return ChromeGrimpan.getInstance();
+//   }
+// }
 
-class IEGrimpanFactory extends AbstractGrimpanFactory {
-  static override createGrimpan() {
-    return IEGrimpan.getInstance();
-  }
-}
+// class IEGrimpanFactory extends AbstractGrimpanFactory {
+//   static override createGrimpan() {
+//     return IEGrimpan.getInstance();
+//   }
+// }
 
 // 만약, 새로운 safari 그림판이 추가되면, if-else가 아니라 새로운 class 하나 만들어주면 되는 것.
 // (예시)
@@ -65,8 +62,14 @@ function main() {
   // simple factory 패턴을 사용하는 경우
   //   grimpanFactory('ie');
   //   grimpanFactory('chrome');
-  const grimpan = ChromeGrimpanFactory.createGrimpan();
+
+  const factory = ChromeGrimpanFactory;
+  const grimpan = factory.createGrimpan();
+  const grimpanMenu = factory.createGrimpanMenu(grimpan);
+  const grimpanHistory = factory.createGrimpanHistory(grimpan);
+
   grimpan.initialize();
-  grimpan.initializeMenu();
+  grimpanMenu.initialize();
+  grimpanHistory.initialize();
 }
 main();
