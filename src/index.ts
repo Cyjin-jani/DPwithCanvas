@@ -1,4 +1,4 @@
-import { ChromeGrimpanFactory } from './Factory/GrimpanFactory';
+import { ChromeGrimpanFactory } from './Factory/GrimpanFactory.js';
 
 // simple factory pattern
 /**
@@ -65,11 +65,21 @@ function main() {
 
   const factory = ChromeGrimpanFactory;
   const grimpan = factory.createGrimpan();
-  const grimpanMenu = factory.createGrimpanMenu(grimpan);
+  const grimpanMenu = factory.createGrimpanMenu(grimpan, document.querySelector('#menu')!); // 있는게 확실해서 뒤에 !를 붙임.
   const grimpanHistory = factory.createGrimpanHistory(grimpan);
 
   grimpan.initialize();
-  grimpanMenu.initialize();
+  grimpanMenu.initialize([
+    'back',
+    'forward',
+    'color',
+    'pipette',
+    'pen',
+    'circle',
+    'rectangle',
+    'eraser',
+    'save',
+  ]);
   grimpanHistory.initialize();
 }
 main();

@@ -1,4 +1,4 @@
-import type { IGrimpan } from './AbstractGrimpan';
+import type { IGrimpan } from './AbstractGrimpan.js';
 
 class ChromeGrimpan implements IGrimpan {
   private static instance: ChromeGrimpan;

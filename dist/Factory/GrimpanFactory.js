@@ -1,9 +1,7 @@
 import ChromeGrimpan from '../ChromeGrimpan.js';
 import IEGrimpan from '../IEGrimpan.js';
-import type Grimpan from './AbstractGrimpan.js';
 import { ChromeGrimpanHistory, IEGrimpanHistory } from './GrimpanHistory.js';
 import { ChromeGrimpanMenu, IEGrimpanMenu } from './GrimpanMenu.js';
-
 // 추상 클래스에서는 타입도 추상 클래스를 가져와야 함.
 // import IEGrimpan from '../IEGrimpan' 해서,
 // !! 구현체인 IEGrimpan을 타입으로 쓴다던가 하면 안됨!
@@ -13,49 +11,39 @@ import { ChromeGrimpanMenu, IEGrimpanMenu } from './GrimpanMenu.js';
 // abstract class AbstractGrimpanFactory {
 //   abstract createGrimpan(): Grimpan;
 // }
-
 // export default AbstractGrimpanFactory;
-
 //다만, static으로 create를 사용하기 위해 다음과 같이 변경함.
 // (원래는 리스코프 치환 원칙 위반이 될 수 있지만, 이건 abstract class여서 그냥 넘어가기로 함.)
-export abstract class AbstractGrimpanFactory {
-  static createGrimpan() {
-    throw new Error('하위 클래스에서 구현해주세요.');
-  }
-
-  static createGrimpanMenu(grimpan: Grimpan, dom: HTMLElement) {
-    throw new Error('하위 클래스에서 구현해주세요.');
-  }
-
-  static createGrimpanHistory(grimpan: Grimpan, dom: HTMLElement) {
-    throw new Error('하위 클래스에서 구현해주세요.');
-  }
+export class AbstractGrimpanFactory {
+    static createGrimpan() {
+        throw new Error('하위 클래스에서 구현해주세요.');
+    }
+    static createGrimpanMenu(grimpan, dom) {
+        throw new Error('하위 클래스에서 구현해주세요.');
+    }
+    static createGrimpanHistory(grimpan, dom) {
+        throw new Error('하위 클래스에서 구현해주세요.');
+    }
 }
-
 export class ChromeGrimpanFactory extends AbstractGrimpanFactory {
-  static override createGrimpan() {
-    return ChromeGrimpan.getInstance();
-  }
-
-  static override createGrimpanMenu(grimpan: ChromeGrimpan, dom: HTMLElement) {
-    return ChromeGrimpanMenu.getInstance(grimpan, dom);
-  }
-
-  static override createGrimpanHistory(grimpan: ChromeGrimpan) {
-    return ChromeGrimpanHistory.getInstance(grimpan);
-  }
+    static createGrimpan() {
+        return ChromeGrimpan.getInstance();
+    }
+    static createGrimpanMenu(grimpan, dom) {
+        return ChromeGrimpanMenu.getInstance(grimpan, dom);
+    }
+    static createGrimpanHistory(grimpan) {
+        return ChromeGrimpanHistory.getInstance(grimpan);
+    }
 }
-
 export class IEGrimpanFactory extends AbstractGrimpanFactory {
-  static override createGrimpan() {
-    return IEGrimpan.getInstance();
-  }
-
-  static override createGrimpanMenu(grimpan: IEGrimpan, dom: HTMLElement) {
-    return IEGrimpanMenu.getInstance(grimpan, dom);
-  }
-
-  static override createGrimpanHistory(grimpan: IEGrimpan) {
-    return IEGrimpanHistory.getInstance(grimpan);
-  }
+    static createGrimpan() {
+        return IEGrimpan.getInstance();
+    }
+    static createGrimpanMenu(grimpan, dom) {
+        return IEGrimpanMenu.getInstance(grimpan, dom);
+    }
+    static createGrimpanHistory(grimpan) {
+        return IEGrimpanHistory.getInstance(grimpan);
+    }
 }

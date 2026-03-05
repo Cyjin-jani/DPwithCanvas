@@ -1,4 +1,4 @@
-import AbstractGrimpan from './Factory/AbstractGrimpan';
+import AbstractGrimpan from './Factory/AbstractGrimpan.js';
 
 class IEGrimpan extends AbstractGrimpan {
   private static instance: IEGrimpan;
