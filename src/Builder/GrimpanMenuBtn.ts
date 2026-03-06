@@ -1,86 +1,24 @@
 import type { GrimpanMenu } from '../Factory/GrimpanMenu';
 
-export class GrimpanMenuBtn {
-  private menu: GrimpanMenu;
-  private name: string;
-  private type: string; // 지우개, 펜 등
-  private onClick?: (() => void) | undefined;
-  private onChange?: (() => void) | undefined;
-  private active?: boolean | undefined;
-  private value?: (string | number) | undefined;
+abstract class GrimpanMenuElementBuilder {
+  btn!: GrimPanMenuBtn;
+  constructor() {}
 
-  private constructor(
-    menu: GrimpanMenu,
-    name: string,
-    type: string,
-    onClick?: () => void,
-    onChange?: () => void,
-    active?: boolean,
-    value?: string | number,
-  ) {
+  build() {
+    return this.btn;
+  }
+}
+
+export abstract class GrimpanMenuElement {
+  protected menu: GrimpanMenu;
+  protected name: string;
+
+  protected constructor(menu: GrimpanMenu, name: string) {
     this.menu = menu;
     this.name = name;
-    this.type = type;
-    this.onClick = onClick;
-    this.onChange = onChange;
-    this.active = active;
-    this.value = value;
   }
 
-  draw() {
-    if (this.type === 'button') {
-      const btn = document.createElement('button');
-      btn.textContent = this.name;
-      if (this.onClick) {
-        btn.addEventListener('click', this.onClick.bind(this));
-      }
-      this.menu.dom.append(btn);
-    } else if (this.type === 'input') {
-      const input = document.createElement('input');
-      input.title = this.name;
-      input.type = 'color'; // 임시로 처리. (당장은 type이 color만 있어서.)
-      if (this.onChange) {
-        input.addEventListener('change', this.onChange.bind(this));
-      }
-      this.menu.dom.append(input);
-    }
-  }
-
-  // 왜 builder를 안에다 만드는가?
-  // - 만약 크폼 빌더, 사파리 빌더 등이 필요하다면 따로 빼서 만들고, 어떤 빌더를 선택할지 고르도록 할 수 있다.
-  // 빌더교체 예시.ts를 참고해라..
-  static Builder = class GrimpanMenuBtnBuilder {
-    btn: GrimpanMenuBtn;
-
-    // 필수값들은 그냥 바로 constructor에서 처리함.
-    constructor(menu: GrimpanMenu, name: string, type: string) {
-      this.btn = new GrimpanMenuBtn(menu, name, type);
-    }
-
-    setOnClick(onClick: () => void) {
-      this.btn.onClick = onClick;
-      return this; // method chaining을 위해 this 반환
-    }
-
-    setOnChange(onChange: () => void) {
-      this.btn.onChange = onChange;
-      return this;
-    }
-
-    setActive(active: boolean) {
-      this.btn.active = active;
-      return this;
-    }
-
-    setValue(value: string | number) {
-      this.btn.value = value;
-      return this;
-    }
-
-    build() {
-      return this.btn;
-    }
-  };
+  abstract draw(): void;
 }
 
 /**
@@ -95,3 +33,86 @@ export class GrimpanMenuBtn {
 //   .setOnClick(() => {})
 //   .setActive(false)
 //   .build();
+
+export class GrimPanMenuInput extends GrimpanMenuElement {
+  private onChange?: (() => void) | undefined;
+  private value?: (string | number) | undefined;
+
+  private constructor(
+    menu: GrimpanMenu,
+    name: string,
+    onChange?: () => void,
+    value?: string | number,
+  ) {
+    super(menu, name);
+    this.onChange = onChange;
+    this.value = value;
+  }
+
+  draw() {
+    const input = document.createElement('input');
+    input.title = this.name;
+    if (this.onChange) {
+      input.addEventListener('change', this.onChange.bind(this));
+    }
+    this.menu.dom.append(input);
+  }
+
+  static Builder = class GrimpanMenuInputBuilder extends GrimpanMenuElementBuilder {
+    override btn: GrimPanMenuInput;
+
+    constructor(menu: GrimpanMenu, name: string) {
+      super();
+      this.btn = new GrimPanMenuInput(menu, name);
+    }
+
+    setOnChange(onChange: () => void) {
+      this.btn.onChange = onChange;
+      return this;
+    }
+
+    setValue(value: string | number) {
+      this.btn.value = value;
+      return this;
+    }
+  };
+}
+
+export class GrimPanMenuBtn extends GrimpanMenuElement {
+  private onClick?: (() => void) | undefined;
+  private active?: boolean | undefined;
+
+  private constructor(menu: GrimpanMenu, name: string, onClick?: () => void, active?: boolean) {
+    super(menu, name);
+    this.onClick = onClick;
+    this.active = active;
+  }
+
+  draw() {
+    const btn = document.createElement('button');
+    btn.textContent = this.name;
+    if (this.onClick) {
+      btn.addEventListener('click', this.onClick.bind(this));
+    }
+    this.menu.dom.append(btn);
+  }
+
+  static Builder = class GrimpanMenuBtnBuilder extends GrimpanMenuElementBuilder {
+    override btn: GrimPanMenuBtn;
+
+    constructor(menu: GrimpanMenu, name: string) {
+      super();
+      this.btn = new GrimPanMenuBtn(menu, name);
+    }
+
+    setOnClick(onClick: () => void) {
+      this.btn.onClick = onClick;
+      return this; // method chaining을 위해 this 반환
+    }
+
+    setActive(active: boolean) {
+      this.btn.active = active;
+      return this;
+    }
+  };
+}
