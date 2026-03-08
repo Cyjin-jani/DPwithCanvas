@@ -1,5 +1,4 @@
-import ChromeGrimpan from '../ChromeGrimpan.js';
-import IEGrimpan from '../IEGrimpan.js';
+import { ChromeGrimpan, Grimpan, IEGrimpan } from './Grimpan.js';
 import { ChromeGrimpanHistory, IEGrimpanHistory } from './GrimpanHistory.js';
 import { ChromeGrimpanMenu, IEGrimpanMenu } from './GrimpanMenu.js';
 // 추상 클래스에서는 타입도 추상 클래스를 가져와야 함.

@@ -8,9 +8,11 @@ class GrimpanMenuElementBuilder {
 export class GrimpanMenuElement {
     menu;
     name;
-    constructor(menu, name) {
+    type;
+    constructor(menu, name, type) {
         this.menu = menu;
         this.name = name;
+        this.type = type;
     }
 }
 /**
@@ -28,14 +30,16 @@ export class GrimpanMenuElement {
 export class GrimPanMenuInput extends GrimpanMenuElement {
     onChange;
     value;
-    constructor(menu, name, onChange, value) {
-        super(menu, name);
+    constructor(menu, name, type, onChange, value) {
+        super(menu, name, type);
         this.onChange = onChange;
         this.value = value;
     }
     draw() {
         const input = document.createElement('input');
         input.title = this.name;
+        input.type = 'color';
+        input.id = 'color-btn';
         if (this.onChange) {
             input.addEventListener('change', this.onChange.bind(this));
         }
@@ -43,9 +47,9 @@ export class GrimPanMenuInput extends GrimpanMenuElement {
     }
     static Builder = class GrimpanMenuInputBuilder extends GrimpanMenuElementBuilder {
         btn;
-        constructor(menu, name) {
+        constructor(menu, name, type) {
             super();
-            this.btn = new GrimPanMenuInput(menu, name);
+            this.btn = new GrimPanMenuInput(menu, name, type);
         }
         setOnChange(onChange) {
             this.btn.onChange = onChange;
@@ -60,14 +64,16 @@ export class GrimPanMenuInput extends GrimpanMenuElement {
 export class GrimPanMenuBtn extends GrimpanMenuElement {
     onClick;
     active;
-    constructor(menu, name, onClick, active) {
-        super(menu, name);
+    constructor(menu, name, type, onClick, active) {
+        super(menu, name, type);
         this.onClick = onClick;
         this.active = active;
+        this.type = type;
     }
     draw() {
         const btn = document.createElement('button');
         btn.textContent = this.name;
+        btn.id = `${this.type}-btn`;
         if (this.onClick) {
             btn.addEventListener('click', this.onClick.bind(this));
         }
@@ -75,9 +81,9 @@ export class GrimPanMenuBtn extends GrimpanMenuElement {
     }
     static Builder = class GrimpanMenuBtnBuilder extends GrimpanMenuElementBuilder {
         btn;
-        constructor(menu, name) {
+        constructor(menu, name, type) {
             super();
-            this.btn = new GrimPanMenuBtn(menu, name);
+            this.btn = new GrimPanMenuBtn(menu, name, type);
         }
         setOnClick(onClick) {
             this.btn.onClick = onClick;

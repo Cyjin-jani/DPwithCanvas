@@ -1,6 +1,4 @@
-import ChromeGrimpan from '../ChromeGrimpan.js';
-import IEGrimpan from '../IEGrimpan.js';
-import type Grimpan from './AbstractGrimpan.js';
+import { ChromeGrimpan, Grimpan, IEGrimpan } from './Grimpan.js';
 import { ChromeGrimpanHistory, IEGrimpanHistory } from './GrimpanHistory.js';
 import { ChromeGrimpanMenu, IEGrimpanMenu } from './GrimpanMenu.js';
 

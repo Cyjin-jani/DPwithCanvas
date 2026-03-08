@@ -57,20 +57,11 @@ function main() {
     //   grimpanFactory('chrome');
     const factory = ChromeGrimpanFactory;
     const grimpan = factory.createGrimpan();
-    const grimpanMenu = factory.createGrimpanMenu(grimpan, document.querySelector('#menu')); // 있는게 확실해서 뒤에 !를 붙임.
-    const grimpanHistory = factory.createGrimpanHistory(grimpan);
-    grimpan.initialize();
-    grimpanMenu.initialize([
-        'back',
-        'forward',
-        'color',
-        'pipette',
-        'pen',
-        'circle',
-        'rectangle',
-        'eraser',
-        'save',
-    ]);
-    grimpanHistory.initialize();
+    // 서로 구분이 되어있고, 밀접한 관계가 없다면 아래와 같이 모두 각자 둘 수 있는데, grimpan의 경우는 menu와 history가 밀접한 연관이 있으므로 합침
+    //   const grimpanMenu = factory.createGrimpanMenu(grimpan, document.querySelector('#menu')!); // 있는게 확실해서 뒤에 !를 붙임.
+    //   const grimpanHistory = factory.createGrimpanHistory(grimpan);
+    grimpan.initialize({
+        menu: ['back', 'forward', 'color', 'pipette', 'pen', 'circle', 'rectangle', 'eraser', 'save'],
+    });
 }
 main();

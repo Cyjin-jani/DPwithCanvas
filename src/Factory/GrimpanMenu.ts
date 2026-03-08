@@ -1,7 +1,15 @@
 import { GrimPanMenuInput, GrimPanMenuBtn } from '../Builder/GrimpanMenuBtn.js';
-import type ChromeGrimpan from '../ChromeGrimpan.js';
-import type IEGrimpan from '../IEGrimpan.js';
-import type Grimpan from './AbstractGrimpan.js';
+import {
+  BackCommand,
+  PenSelectCommand,
+  EraserSelectCommand,
+  CircleSelectCommand,
+  RectangleSelectCommand,
+  PipetteSelectCommand,
+  Command,
+} from '../Commands/index.js';
+import type { ChromeGrimpan, GrimpanMode, IEGrimpan } from './Grimpan.js';
+import type { Grimpan } from './Grimpan.js';
 
 export abstract class GrimpanMenu {
   grimpan: Grimpan;
@@ -11,6 +19,13 @@ export abstract class GrimpanMenu {
     this.dom = dom;
   }
 
+  // 자식끼리 공유하는 같은 함수이므로 그냥 abstract에 구현함.
+  // 자식끼리 내부 로직이 달라져야 하면 abstract로 만들고, 실제 내부 로직은 각 자식 클래스에서 구현.
+  setActiveBtn(type: GrimpanMode) {
+    document.querySelector('.active')?.classList.remove('active');
+    document.querySelector(`#${type}-btn`)?.classList.add('active');
+    this.grimpan.setMode(type);
+  }
   abstract initialize(types: BtnType[]): void;
   static getInstance(grimpan: Grimpan, dom: HTMLElement) {}
 }
@@ -27,34 +42,7 @@ export class IEGrimpanMenu extends GrimpanMenu {
   }
 }
 
-abstract class Command {
-  abstract execute(): void;
-}
-
-class BackCommand extends Command {
-  name = 'back';
-  override execute(): void {
-    // 뒤로가기 구현
-    // 여기서 바로 비즈니스 로직을 구현하지 않고, 아래와 같이 history의 함수를 호출해서 처리한다면?
-    // 그것이 바로 receiver(수신자)의 역할임.
-    // this.grimpan.history.goBack(); // 다만 이런식의 receiver가 필수는 아님
-  }
-}
-class PenCommand extends Command {
-  name = 'pen';
-  override execute(): void {
-    // pen 로직 구현
-  }
-}
-
-class EraserCommand extends Command {
-  name = 'eraser';
-  override execute(): void {
-    // 지우개 로직 구현
-  }
-}
-
-type BtnType =
+export type BtnType =
   | 'back'
   | 'forward'
   | 'color'
@@ -68,7 +56,7 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
   private static instance: ChromeGrimpanMenu;
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
-    document.addEventListener('keyup', this.onClickBack);
+    this.setActiveBtn('pen');
   }
 
   // invoker 역할의 함수
@@ -88,60 +76,94 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
     // 위와 같이 command.execute()를 여기에 적으면, 모든 onClickXXX (pen, rectangle, circle 등)에 대해
     // 똑같은 코드로 조건 분기처리를 작성해서 execute 여부를 관리해야 함.
     // 다만 위와 같이 invoker 함수로 두면? executeCommand 함수 안에서 한번에 처리할 수 있음.
-    this.executeCommand(new BackCommand());
+    this.executeCommand(new BackCommand(this.grimpan.history));
+  }
+
+  onClickPen() {
+    const command = new PenSelectCommand(this.grimpan);
+    this.executeCommand(command);
+    this.grimpan.history.stack.push(command);
+  }
+
+  onClickEraser() {
+    this.executeCommand(new EraserSelectCommand(this.grimpan));
+  }
+
+  onClickCircle() {
+    this.executeCommand(new CircleSelectCommand(this.grimpan));
+  }
+
+  onClickRectangle() {
+    this.executeCommand(new RectangleSelectCommand(this.grimpan));
+  }
+
+  onClickPipette() {
+    this.executeCommand(new PipetteSelectCommand(this.grimpan));
   }
 
   drawButtonByType(type: BtnType) {
     switch (type) {
       case 'back': {
-        const btn = new GrimPanMenuBtn.Builder(this, '뒤로').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '뒤로', type)
+          .setOnClick(this.onClickBack.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
       case 'forward': {
-        const btn = new GrimPanMenuBtn.Builder(this, '앞으로').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '앞으로', type).build();
         btn.draw();
         return btn;
       }
 
       case 'color': {
-        const btn = new GrimPanMenuInput.Builder(this, '컬러').build();
+        const btn = new GrimPanMenuInput.Builder(this, '컬러', type).build();
         btn.draw();
         return btn;
       }
 
       case 'pipette': {
-        const btn = new GrimPanMenuBtn.Builder(this, '스포이트').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '스포이트', type)
+          .setOnClick(this.onClickPipette.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case 'pen': {
-        const btn = new GrimPanMenuBtn.Builder(this, '펜').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '펜', type)
+          .setOnClick(this.onClickPen.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case 'circle': {
-        const btn = new GrimPanMenuBtn.Builder(this, '원').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '원', type)
+          .setOnClick(this.onClickCircle.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case 'rectangle': {
-        const btn = new GrimPanMenuBtn.Builder(this, '사각형').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '사각형', type)
+          .setOnClick(this.onClickRectangle.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case 'eraser': {
-        const btn = new GrimPanMenuBtn.Builder(this, '지우개').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '지우개', type)
+          .setOnClick(this.onClickEraser.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case 'save': {
-        const btn = new GrimPanMenuBtn.Builder(this, '저장').build();
+        const btn = new GrimPanMenuBtn.Builder(this, '저장', type).build();
         btn.draw();
         return btn;
       }
