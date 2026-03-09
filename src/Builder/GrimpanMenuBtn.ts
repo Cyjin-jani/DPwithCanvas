@@ -37,7 +37,7 @@ export abstract class GrimpanMenuElement {
 //   .build();
 
 export class GrimPanMenuInput extends GrimpanMenuElement {
-  private onChange?: (() => void) | undefined;
+  private onChange?: ((e: Event) => void) | undefined;
   private value?: (string | number) | undefined;
 
   private constructor(
@@ -60,6 +60,7 @@ export class GrimPanMenuInput extends GrimpanMenuElement {
     if (this.onChange) {
       input.addEventListener('change', this.onChange.bind(this));
     }
+    this.menu.colorBtn = input;
     this.menu.dom.append(input);
   }
 
@@ -71,7 +72,7 @@ export class GrimPanMenuInput extends GrimpanMenuElement {
       this.btn = new GrimPanMenuInput(menu, name, type);
     }
 
-    setOnChange(onChange: () => void) {
+    setOnChange(onChange: (e: Event) => void) {
       this.btn.onChange = onChange;
       return this;
     }

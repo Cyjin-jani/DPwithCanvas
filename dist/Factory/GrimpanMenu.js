@@ -3,6 +3,7 @@ import { BackCommand, PenSelectCommand, EraserSelectCommand, CircleSelectCommand
 export class GrimpanMenu {
     grimpan;
     dom;
+    colorBtn;
     constructor(grimpan, dom) {
         this.grimpan = grimpan;
         this.dom = dom;
@@ -12,7 +13,17 @@ export class GrimpanMenu {
     setActiveBtn(type) {
         document.querySelector('.active')?.classList.remove('active');
         document.querySelector(`#${type}-btn`)?.classList.add('active');
-        this.grimpan.setMode(type);
+        // this.grimpan.setMode(type); // 순환 참조가 발생하기 때문에 여기서 없앰.
+    }
+    // invoker 역할의 함수
+    // invoker는 조건에 따라서 command를 호출할 수도 있고, 안할수도 있음.
+    // 실행에 대한 조건을 여기서 다룰 수 있음.
+    executeCommand(command) {
+        // 예시임
+        // 비활성화 로직이 필요하다면
+        // if (비활성화) return; 이런식으로 한번에 처리할 수 있음.
+        // 그래서 중앙에서 command를 통제하는 이 함수가 필요.
+        command.execute();
     }
     static getInstance(grimpan, dom) { }
 }
@@ -30,17 +41,7 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
     static instance;
     initialize(types) {
         types.forEach(this.drawButtonByType.bind(this));
-        this.setActiveBtn('pen');
-    }
-    // invoker 역할의 함수
-    // invoker는 조건에 따라서 command를 호출할 수도 있고, 안할수도 있음.
-    // 실행에 대한 조건을 여기서 다룰 수 있음.
-    executeCommand(command) {
-        // 예시임
-        // 비활성화 로직이 필요하다면
-        // if (비활성화) return; 이런식으로 한번에 처리할 수 있음.
-        // 그래서 중앙에서 command를 통제하는 이 함수가 필요.
-        command.execute();
+        this.grimpan.setMode('pen');
     }
     onClickBack() {
         // new BackCommand().execute(); // 이렇게 안하고 아래와 같이 처리하는 이유?
@@ -56,16 +57,16 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         this.grimpan.history.stack.push(command);
     }
     onClickEraser() {
-        this.executeCommand(new EraserSelectCommand(this.grimpan));
+        this.grimpan.setMode('eraser');
     }
     onClickCircle() {
-        this.executeCommand(new CircleSelectCommand(this.grimpan));
+        this.grimpan.setMode('circle');
     }
     onClickRectangle() {
-        this.executeCommand(new RectangleSelectCommand(this.grimpan));
+        this.grimpan.setMode('rectangle');
     }
     onClickPipette() {
-        this.executeCommand(new PipetteSelectCommand(this.grimpan));
+        this.grimpan.setMode('pipette');
     }
     drawButtonByType(type) {
         switch (type) {
@@ -82,7 +83,13 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
                 return btn;
             }
             case 'color': {
-                const btn = new GrimPanMenuInput.Builder(this, '컬러', type).build();
+                const btn = new GrimPanMenuInput.Builder(this, '컬러', type)
+                    .setOnChange((e) => {
+                    if (e.target) {
+                        this.grimpan.setColor(e.target.value);
+                    }
+                })
+                    .build();
                 btn.draw();
                 return btn;
             }

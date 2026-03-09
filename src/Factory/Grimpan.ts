@@ -1,5 +1,13 @@
 import { BackCommand, ForwardCommand } from '../Commands/index.js';
 import {
+  CircleMode,
+  EraserMode,
+  PenMode,
+  PipetteMode,
+  RectangleMode,
+  type Mode,
+} from '../modes/index.js';
+import {
   ChromeGrimpanFactory,
   IEGrimpanFactory,
   type AbstractGrimpanFactory,
@@ -18,7 +26,9 @@ abstract class Grimpan {
   ctx: CanvasRenderingContext2D;
   history!: GrimpanHistory;
   menu!: GrimpanMenu;
-  mode!: GrimpanMode;
+  mode!: Mode;
+  color: string;
+  active: boolean; // 마우스 눌렀는지 유무.
 
   protected constructor(canvas: HTMLCanvasElement | null, factory: AbstractGrimpanFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -26,14 +36,46 @@ abstract class Grimpan {
     }
     this.canvas = canvas;
     this.ctx = this.canvas.getContext('2d')!;
+    this.color = '#000';
+    this.active = false;
   }
 
   setMode(mode: GrimpanMode) {
     console.log(mode);
-    this.mode = mode;
+    switch (mode) {
+      case 'pen':
+        this.mode = new PenMode(this);
+        break;
+      case 'eraser':
+        this.mode = new EraserMode(this);
+        break;
+      case 'pipette':
+        this.mode = new PipetteMode(this);
+        break;
+      case 'rectangle':
+        this.mode = new RectangleMode(this);
+        break;
+      case 'circle':
+        this.mode = new CircleMode(this);
+        break;
+    }
+  }
+
+  setColor(color: string) {
+    this.color = color;
+  }
+
+  changeColor(color: string) {
+    this.setColor(color);
+    if (this.menu.colorBtn) {
+      this.menu.colorBtn.value = color;
+    }
   }
 
   abstract initialize(option: GrimpanOption): void;
+  abstract onMouseDown(e: MouseEvent): void;
+  abstract onMouseMove(e: MouseEvent): void;
+  abstract onMouseUp(e: MouseEvent): void;
 
   static getInstance() {}
 }
@@ -66,6 +108,38 @@ class ChromeGrimpan extends Grimpan {
         return;
       }
     });
+
+    this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+    this.canvas.addEventListener('mouseleave', this.onMouseUp.bind(this));
+  }
+
+  override onMouseDown(e: MouseEvent): void {
+    /**
+     * State 패턴 활용의 예시
+     * 두개 이상의 함수 내에서 동일한 if-else문 또는 switch-case 패턴이 반복되는 경우 사용할 수 있음.
+     */
+    this.mode.mousedown(e);
+
+    // State 패턴이 없으면 여기서 switch case를 사용해야 함
+    // switch (this.mode) {
+    //   case 'pen':
+    //     break;
+    //   case 'eraser':
+    //     break;
+    //   case 'pipette':
+    //     break;
+    //   ...등등 내부 로직까지 포함. 이 switch case가 onMouseMove, onMouseUp에서도 동일하게 사용됨.
+    // }
+  }
+
+  override onMouseMove(e: MouseEvent): void {
+    this.mode.mousemove(e);
+  }
+
+  override onMouseUp(e: MouseEvent): void {
+    this.mode.mouseup(e);
   }
 
   static override getInstance() {
@@ -80,6 +154,12 @@ class IEGrimpan extends Grimpan {
   private static instance: IEGrimpan;
 
   initialize() {}
+
+  override onMouseDown(): void {}
+
+  override onMouseMove(): void {}
+
+  override onMouseUp(): void {}
 
   static override getInstance() {
     if (!this.instance) {

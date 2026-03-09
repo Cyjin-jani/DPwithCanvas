@@ -1,0 +1,123 @@
+import {
+  CircleSelectCommand,
+  EraserSelectCommand,
+  PenSelectCommand,
+  PipetteSelectCommand,
+  RectangleSelectCommand,
+} from '../Commands/index.js';
+import { Grimpan } from '../Factory/Grimpan.js';
+
+const convertToHex = (color: number) => {
+  if (color < 0) return 0;
+  if (color > 255) return 255;
+
+  const hex = color.toString(16); // 16진법으로 바꿈
+  return `0${hex}`.slice(-2); // 2자리임을 고정 // 05 -> 05, 0ab -> ab
+};
+
+const rgbToHex = (r: number, g: number, b: number) => {
+  return `#${convertToHex(r)}${convertToHex(g)}${convertToHex(b)}`;
+};
+
+/**
+ * State 패턴을 활용한 예시
+ */
+export abstract class Mode {
+  constructor(protected grimpan: Grimpan) {}
+  abstract mousedown(e: MouseEvent): void;
+  abstract mousemove(e: MouseEvent): void;
+  abstract mouseup(e: MouseEvent): void;
+}
+
+export class PenMode extends Mode {
+  constructor(grimpan: Grimpan) {
+    super(grimpan);
+    grimpan.menu.executeCommand(new PenSelectCommand(grimpan));
+  }
+
+  override mousedown(e: MouseEvent): void {
+    this.grimpan.active = true;
+    this.grimpan.ctx.lineWidth = 1;
+    this.grimpan.ctx.lineCap = 'round';
+    this.grimpan.ctx.strokeStyle = this.grimpan.color;
+    this.grimpan.ctx.globalCompositeOperation = 'source-over';
+    this.grimpan.ctx.beginPath();
+    this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
+  }
+  override mousemove(e: MouseEvent): void {
+    if (!this.grimpan.active) return;
+    this.grimpan.ctx.lineTo(e.offsetX, e.offsetY);
+    this.grimpan.ctx.stroke();
+    this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
+  }
+  override mouseup(e: MouseEvent): void {
+    this.grimpan.active = false;
+    // TODO: history 저장
+  }
+}
+export class EraserMode extends Mode {
+  constructor(grimpan: Grimpan) {
+    super(grimpan);
+    grimpan.menu.executeCommand(new EraserSelectCommand(grimpan));
+  }
+
+  override mousedown(e: MouseEvent): void {
+    this.grimpan.active = true;
+    this.grimpan.ctx.lineWidth = 10;
+    this.grimpan.ctx.lineCap = 'round';
+    this.grimpan.ctx.strokeStyle = this.grimpan.color;
+    this.grimpan.ctx.globalCompositeOperation = 'destination-out';
+    this.grimpan.ctx.beginPath();
+    this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
+  }
+  override mousemove(e: MouseEvent): void {
+    if (!this.grimpan.active) return;
+    this.grimpan.ctx.lineTo(e.offsetX, e.offsetY);
+    this.grimpan.ctx.stroke();
+    this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
+  }
+  override mouseup(e: MouseEvent): void {
+    this.grimpan.active = false;
+    // TODO: history 저장
+  }
+}
+export class PipetteMode extends Mode {
+  constructor(grimpan: Grimpan) {
+    super(grimpan);
+    grimpan.menu.executeCommand(new PipetteSelectCommand(grimpan));
+  }
+
+  override mousedown(e: MouseEvent): void {}
+  override mousemove(e: MouseEvent): void {
+    const { data } = this.grimpan.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+    if (data[3] === 0) {
+      // 투명도
+      this.grimpan.changeColor('#ffffff');
+    } else {
+      this.grimpan.changeColor(rgbToHex(data[0] as number, data[1] as number, data[2] as number));
+    }
+  }
+  override mouseup(e: MouseEvent): void {
+    this.grimpan.setMode('pen');
+  }
+}
+export class RectangleMode extends Mode {
+  constructor(grimpan: Grimpan) {
+    super(grimpan);
+    grimpan.menu.executeCommand(new RectangleSelectCommand(grimpan));
+  }
+
+  override mousedown(e: MouseEvent): void {}
+  override mousemove(e: MouseEvent): void {}
+  override mouseup(e: MouseEvent): void {}
+}
+export class CircleMode extends Mode {
+  constructor(grimpan: Grimpan) {
+    super(grimpan);
+    grimpan.menu.executeCommand(new CircleSelectCommand(grimpan));
+  }
+
+  override mousedown(e: MouseEvent): void {}
+  override mousemove(e: MouseEvent): void {}
+  override mouseup(e: MouseEvent): void {}
+}
