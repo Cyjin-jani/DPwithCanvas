@@ -10,6 +10,11 @@ class Grimpan {
     color;
     active; // 마우스 눌렀는지 유무.
     saveStrategy;
+    saveSetting = {
+        blur: false,
+        invert: false,
+        grayscale: false,
+    };
     constructor(canvas, factory) {
         if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
             throw new Error('canvas 엘레먼트를 넣어주세요.');

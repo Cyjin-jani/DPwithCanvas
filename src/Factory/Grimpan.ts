@@ -30,6 +30,11 @@ abstract class Grimpan {
   color: string;
   active: boolean; // 마우스 눌렀는지 유무.
   saveStrategy!: () => void;
+  saveSetting = {
+    blur: false,
+    invert: false,
+    grayscale: false,
+  };
 
   protected constructor(canvas: HTMLCanvasElement | null, factory: AbstractGrimpanFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {

@@ -14,6 +14,12 @@ export class GrimpanMenuElement {
         this.name = name;
         this.type = type;
     }
+    draw() {
+        const btn = this.createButton();
+        this.appendBeforeBtn();
+        this.appendToDOM(btn);
+        this.appendAfterBtn();
+    }
 }
 /**
  * 다음과 같이 사용할 수 있다.
@@ -35,16 +41,21 @@ export class GrimPanMenuInput extends GrimpanMenuElement {
         this.onChange = onChange;
         this.value = value;
     }
-    draw() {
-        const input = document.createElement('input');
-        input.title = this.name;
-        input.type = 'color';
-        input.id = 'color-btn';
+    createButton() {
+        const btn = document.createElement('input');
+        btn.title = this.name;
+        btn.type = 'color';
+        btn.id = 'color-btn';
         if (this.onChange) {
-            input.addEventListener('change', this.onChange.bind(this));
+            btn.addEventListener('change', this.onChange.bind(this));
         }
-        this.menu.colorBtn = input;
-        this.menu.dom.append(input);
+        return btn;
+    }
+    appendBeforeBtn() { }
+    appendAfterBtn() { }
+    appendToDOM(btn) {
+        this.menu.colorBtn = btn;
+        this.menu.dom.append(btn);
     }
     static Builder = class GrimpanMenuInputBuilder extends GrimpanMenuElementBuilder {
         btn;
@@ -71,13 +82,20 @@ export class GrimPanMenuBtn extends GrimpanMenuElement {
         this.active = active;
         this.type = type;
     }
-    draw() {
+    createButton() {
         const btn = document.createElement('button');
         btn.textContent = this.name;
         btn.id = `${this.type}-btn`;
         if (this.onClick) {
             btn.addEventListener('click', this.onClick.bind(this));
         }
+        return btn;
+    }
+    appendBeforeBtn() {
+        // 자식 로직
+    }
+    appendAfterBtn() { }
+    appendToDOM(btn) {
         this.menu.dom.append(btn);
     }
     static Builder = class GrimpanMenuBtnBuilder extends GrimpanMenuElementBuilder {
@@ -85,6 +103,54 @@ export class GrimPanMenuBtn extends GrimpanMenuElement {
         constructor(menu, name, type) {
             super();
             this.btn = new GrimPanMenuBtn(menu, name, type);
+        }
+        setOnClick(onClick) {
+            this.btn.onClick = onClick;
+            return this; // method chaining을 위해 this 반환
+        }
+        setActive(active) {
+            this.btn.active = active;
+            return this;
+        }
+    };
+}
+export class GrimPanMenuSaveBtn extends GrimPanMenuBtn {
+    onClickBlur; // 이미지 흐리게
+    onClickInvert; // 이미지 반전
+    onClickGrayScale; // 이미지 흑백으로
+    constructor(menu, name, type, onClick, active) {
+        super(menu, name, type);
+        this.onClick = onClick;
+        this.active = active;
+    }
+    // draw를 override한게 없어지고, 아래 함수만 남음
+    // draw가 없으면, 부모것을 찾아가게 됨. 부모에서 자식꺼 override한게 있나 보고 없으면 부모꺼 실행.
+    // draw()를 하면, 아래처럼 appendBeforeBtn만 자식의 함수를 이용해서 처리함.
+    // 템플릿 메서드 패턴은 이처럼 장점도 있지만,
+    // 단점은, 부모와의 상속 구조가 복잡해질수록 코드의 위치 등 거리가 멀어지므로 코드 파악이 어려울 수 있음 (가독성 이슈)
+    appendBeforeBtn() {
+        this.drawInput('블러', this.onClickBlur);
+        this.drawInput('반전', this.onClickInvert);
+        this.drawInput('흑백', this.onClickGrayScale);
+    }
+    drawInput(title, onChange) {
+        const input = document.createElement('input');
+        input.title = title;
+        input.type = 'checkbox';
+        input.addEventListener('change', onChange.bind(this));
+        this.menu.dom.append(input);
+    }
+    static Builder = class GrimpanMenuSaveBtnBuilder extends GrimpanMenuElementBuilder {
+        btn;
+        constructor(menu, name, type) {
+            super();
+            this.btn = new GrimPanMenuSaveBtn(menu, name, type);
+        }
+        setFilterListeners(listeners) {
+            this.btn.onClickBlur = listeners.blur;
+            this.btn.onClickInvert = listeners.invert;
+            this.btn.onClickGrayScale = listeners.grayscale;
+            return this;
         }
         setOnClick(onClick) {
             this.btn.onClick = onClick;
