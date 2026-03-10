@@ -1,5 +1,5 @@
 import { GrimPanMenuInput, GrimPanMenuBtn } from '../Builder/GrimpanMenuBtn.js';
-import { BackCommand, PenSelectCommand, EraserSelectCommand, CircleSelectCommand, RectangleSelectCommand, PipetteSelectCommand, Command, } from '../Commands/index.js';
+import { BackCommand, PenSelectCommand, Command, SaveCommand } from '../Commands/index.js';
 export class GrimpanMenu {
     grimpan;
     dom;
@@ -42,6 +42,9 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
     initialize(types) {
         types.forEach(this.drawButtonByType.bind(this));
         this.grimpan.setMode('pen');
+    }
+    onSave() {
+        this.executeCommand(new SaveCommand(this.grimpan));
     }
     onClickBack() {
         // new BackCommand().execute(); // 이렇게 안하고 아래와 같이 처리하는 이유?
@@ -129,7 +132,9 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
                 return btn;
             }
             case 'save': {
-                const btn = new GrimPanMenuBtn.Builder(this, '저장', type).build();
+                const btn = new GrimPanMenuBtn.Builder(this, '저장', type)
+                    .setOnClick(this.onSave.bind(this))
+                    .build();
                 btn.draw();
                 return btn;
             }

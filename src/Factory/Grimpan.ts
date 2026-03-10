@@ -29,6 +29,7 @@ abstract class Grimpan {
   mode!: Mode;
   color: string;
   active: boolean; // 마우스 눌렀는지 유무.
+  saveStrategy!: () => void;
 
   protected constructor(canvas: HTMLCanvasElement | null, factory: AbstractGrimpanFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -38,6 +39,53 @@ abstract class Grimpan {
     this.ctx = this.canvas.getContext('2d')!;
     this.color = '#000';
     this.active = false;
+    this.setSaveStrategy('png');
+  }
+
+  setSaveStrategy(imageType: 'png' | 'jpg' | 'webp' | 'avif' | 'gif' | 'pdf') {
+    // 각 case 별로 일종의 알고리즘이 필요. 알고리즘을 전략이라고 부를 수도 있음.
+    // 그래서 각 전략 별로 만드는 것이 Strategy pattern.
+    // 원래는 객체로 만들어서 관리하지만, 아래와 같이 간단한 경우엔 람다 함수로 처리할 수도 있음.
+
+    // 자기 스스로 상태를 바꿀 수 있는 건 state 패턴.
+    // 예를 들어 grimpan.setStrategy('something') 이런 식으로 상태를 스스로 setting
+    // saveStrategy는 어떤 grimpan이라든지 의존성을 받아서 처리할 수가 없음.
+    // 결론적으로 부모에 대한 참조를 가지고 있지 않아야 전략(Strategy) 패턴이라고 볼 수 있음.
+    switch (imageType) {
+      case 'png':
+        this.saveStrategy = () => {
+          const a = document.createElement('a');
+          a.download = 'canvas.png';
+          a.href = this.canvas.toDataURL('image/png');
+          a.click();
+        };
+        break;
+      case 'jpg':
+        this.saveStrategy = () => {
+          const a = document.createElement('a');
+          a.download = 'canvas.jpg';
+          a.href = this.canvas.toDataURL('image/jpeg');
+          a.click();
+        };
+        break;
+      case 'webp':
+        this.saveStrategy = () => {
+          const a = document.createElement('a');
+          a.download = 'canvas.webp';
+          a.href = this.canvas.toDataURL('image/webp');
+          a.click();
+        };
+        break;
+      case 'avif':
+        this.saveStrategy = () => {};
+        break;
+      case 'gif':
+        this.saveStrategy = () => {};
+        break;
+      case 'pdf':
+        this.saveStrategy = () => {};
+        break;
+    }
   }
 
   setMode(mode: GrimpanMode) {
