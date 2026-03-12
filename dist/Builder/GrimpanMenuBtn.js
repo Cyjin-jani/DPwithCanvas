@@ -130,8 +130,8 @@ export class GrimPanMenuSaveBtn extends GrimPanMenuBtn {
     // 단점은, 부모와의 상속 구조가 복잡해질수록 코드의 위치 등 거리가 멀어지므로 코드 파악이 어려울 수 있음 (가독성 이슈)
     appendBeforeBtn() {
         this.drawInput('블러', this.onClickBlur);
-        this.drawInput('반전', this.onClickInvert);
         this.drawInput('흑백', this.onClickGrayScale);
+        this.drawInput('반전', this.onClickInvert);
     }
     drawInput(title, onChange) {
         const input = document.createElement('input');

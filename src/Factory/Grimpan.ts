@@ -1,4 +1,5 @@
 import { BackCommand, ForwardCommand } from '../Commands/index.js';
+import { BlurFilter, DefaultFilter, GrayscaleFilter, InvertFilter } from '../filters/index.js';
 import {
   CircleMode,
   EraserMode,
@@ -59,10 +60,44 @@ abstract class Grimpan {
     switch (imageType) {
       case 'png':
         this.saveStrategy = () => {
-          const a = document.createElement('a');
-          a.download = 'canvas.png';
-          a.href = this.canvas.toDataURL('image/png');
-          a.click();
+          // data 준비
+          let imageData = this.ctx.getImageData(0, 0, 300, 300);
+          const offscreenCanvas = new OffscreenCanvas(300, 300);
+          const offscreenContext = offscreenCanvas.getContext('2d')!;
+          offscreenContext.putImageData(imageData, 0, 0);
+          // 책임 연쇄 패턴으로 filter를 적용.
+          const df = new DefaultFilter();
+          let filter = df;
+          if (this.saveSetting.blur) {
+            const bf = new BlurFilter();
+            filter = filter.setNext(bf);
+          }
+
+          if (this.saveSetting.grayscale) {
+            const gf = new GrayscaleFilter();
+            filter = filter.setNext(gf);
+          }
+
+          if (this.saveSetting.invert) {
+            const ivf = new InvertFilter();
+            filter = filter.setNext(ivf);
+          }
+          // 필더 적용 완료 시 이미지 다운로드 처리.
+          // 반드시 책임 연쇄 패턴에선 첫 번째 handle을 실행해야 함
+          df.handle(offscreenCanvas).then(() => {
+            const a = document.createElement('a');
+            a.download = 'canvas.png';
+            offscreenCanvas.convertToBlob().then((blob) => {
+              const reader = new FileReader();
+              reader.addEventListener('load', () => {
+                const dataURL = reader.result as string;
+                let url = dataURL.replace(/^data:image\/png/, 'data:application/octet-stream');
+                a.href = url;
+                a.click();
+              });
+              reader.readAsDataURL(blob);
+            });
+          });
         };
         break;
       case 'jpg':
