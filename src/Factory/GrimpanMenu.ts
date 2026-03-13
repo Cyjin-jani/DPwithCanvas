@@ -1,5 +1,6 @@
 import { GrimPanMenuInput, GrimPanMenuBtn, GrimPanMenuSaveBtn } from '../Builder/GrimpanMenuBtn.js';
 import { BackCommand, PenSelectCommand, Command, SaveCommand } from '../Commands/index.js';
+import { SubscriptionManager } from '../Observer.js';
 import type { ChromeGrimpan, GrimpanMode, IEGrimpan } from './Grimpan.js';
 import type { Grimpan } from './Grimpan.js';
 
@@ -11,6 +12,19 @@ export abstract class GrimpanMenu {
   protected constructor(grimpan: Grimpan, dom: HTMLElement) {
     this.grimpan = grimpan;
     this.dom = dom;
+    // 구독 처리
+    SubscriptionManager.getInstance().subscribe('saveComplete', {
+      name: 'menu',
+      publish: this.afterSaveComplete.bind(this),
+    });
+  }
+
+  afterSaveComplete() {
+    console.log('menu: save completed');
+  }
+
+  cancelSaveCompleteAlarm() {
+    SubscriptionManager.getInstance().unsubscribe('saveComplete', 'menu');
   }
 
   // 자식끼리 공유하는 같은 함수이므로 그냥 abstract에 구현함.

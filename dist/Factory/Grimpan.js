@@ -1,6 +1,7 @@
 import { BackCommand, ForwardCommand } from '../Commands/index.js';
 import { BlurFilter, DefaultFilter, GrayscaleFilter, InvertFilter } from '../filters/index.js';
 import { CircleMode, EraserMode, PenMode, PipetteMode, RectangleMode, } from '../modes/index.js';
+import { SubscriptionManager } from '../Observer.js';
 import { ChromeGrimpanFactory, IEGrimpanFactory, } from './GrimpanFactory.js';
 class Grimpan {
     canvas;
@@ -25,6 +26,7 @@ class Grimpan {
         this.color = '#000';
         this.active = false;
         this.setSaveStrategy('png');
+        SubscriptionManager.getInstance().addEvent('saveComplete');
     }
     setSaveStrategy(imageType) {
         // 각 case 별로 일종의 알고리즘이 필요. 알고리즘을 전략이라고 부를 수도 있음.
@@ -69,6 +71,9 @@ class Grimpan {
                                 let url = dataURL.replace(/^data:image\/png/, 'data:application/octet-stream');
                                 a.href = url;
                                 a.click();
+                                // 저장 완료에 대한 알림을 전달하기 위해 옵저버 패턴을 사용.
+                                // 누가 구독하고 있는지는 모르겠지만, 구독하고 있는 모두에게 알림을 주겠다는 것.
+                                SubscriptionManager.getInstance().publish('saveComplete');
                             });
                             reader.readAsDataURL(blob);
                         });

@@ -1,3 +1,4 @@
+import { SubscriptionManager } from '../Observer.js';
 import { Grimpan, IEGrimpan, ChromeGrimpan } from './Grimpan.js';
 // 원래는 일반 배열인데, 프로토타입 패턴으로 구현하기 위해 Array를 상속받아 클래스로 만듦.
 class HistoryStack extends Array {
@@ -31,6 +32,18 @@ export class GrimpanHistory {
     constructor(grimpan) {
         this.grimpan = grimpan;
         this.stack = new HistoryStack();
+        // 구독 처리 (grimpan을 몰라도 됨)
+        SubscriptionManager.getInstance().subscribe('saveComplete', {
+            name: 'history',
+            publish: this.afterSaveComplete.bind(this),
+        });
+    }
+    afterSaveComplete() {
+        console.log('history: save completed');
+    }
+    // 구독 해지 (알림을 받고 싶지 않을 때) 처리 예시
+    cancelSaveCompleteAlarm() {
+        SubscriptionManager.getInstance().unsubscribe('saveComplete', 'history');
     }
     getStack() {
         return this.stack.clone(); // 가져올 때에도 clone을 활용.

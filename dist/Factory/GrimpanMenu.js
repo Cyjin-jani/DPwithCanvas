@@ -1,5 +1,6 @@
 import { GrimPanMenuInput, GrimPanMenuBtn, GrimPanMenuSaveBtn } from '../Builder/GrimpanMenuBtn.js';
 import { BackCommand, PenSelectCommand, Command, SaveCommand } from '../Commands/index.js';
+import { SubscriptionManager } from '../Observer.js';
 export class GrimpanMenu {
     grimpan;
     dom;
@@ -7,6 +8,17 @@ export class GrimpanMenu {
     constructor(grimpan, dom) {
         this.grimpan = grimpan;
         this.dom = dom;
+        // 구독 처리
+        SubscriptionManager.getInstance().subscribe('saveComplete', {
+            name: 'menu',
+            publish: this.afterSaveComplete.bind(this),
+        });
+    }
+    afterSaveComplete() {
+        console.log('menu: save completed');
+    }
+    cancelSaveCompleteAlarm() {
+        SubscriptionManager.getInstance().unsubscribe('saveComplete', 'menu');
     }
     // 자식끼리 공유하는 같은 함수이므로 그냥 abstract에 구현함.
     // 자식끼리 내부 로직이 달라져야 하면 abstract로 만들고, 실제 내부 로직은 각 자식 클래스에서 구현.
