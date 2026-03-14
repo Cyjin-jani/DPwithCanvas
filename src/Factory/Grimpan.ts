@@ -1,4 +1,4 @@
-import { BackCommand, ForwardCommand } from '../Commands/index.js';
+import { BackCommand, Command, ForwardCommand, SaveHistoryCommand } from '../Commands/index.js';
 import { BlurFilter, DefaultFilter, GrayscaleFilter, InvertFilter } from '../filters/index.js';
 import {
   CircleMode,
@@ -48,6 +48,26 @@ abstract class Grimpan {
     this.active = false;
     this.setSaveStrategy('png');
     SubscriptionManager.getInstance().addEvent('saveComplete');
+  }
+
+  // history 저장을 위한 메멘토 패턴
+  // 반드시, 상태를 가지고 있는 class 안에서 만들어야 함.
+  // 가끔 snapshot으로 저장해야 할 상태들이 private인 경우가 있을 수 있음.
+  // 이를 대비하기 위해 같은 class 내부에서 데이터를 이렇게 만들어서 처리하는 것.
+  // 메멘토 패턴의 단점은, 객체 상태 전체를 저장하는 거라서, 히스토리가 많이 쌓이면 메모리 비용이 많이 들 수 있음. (렘이 늘어남)
+  // 게다가 브라우저 환경에서는 하나의 페이지에서 사용될 수 있는 메모리 양이 한정되어있음
+  // 따라서 history는 100개까지만 쌓이게 한다던지 하는 식으로 제한을 두는 것이 좋음.
+  makeSnapshot() {
+    const snapshot = {
+      color: this.color,
+      mode: this.mode,
+      data: this.canvas.toDataURL('image/png'),
+    };
+    return Object.freeze(snapshot); // js에서는 private이 사라짐. 그래서 객체를 얼리는 형태로써 불변성을 지키려고 함
+    // 객체 수정을 못하게 하는 다른 방법이 있을까?
+    // - Object.preventExtensions() : 새로운 거 추가하는 것만 막음 (가장 제약을 덜 줌)
+    // - Object.seal() : 객체에 추가 또는 삭제는 막음. 대신 수정하는 건 좀 허용을 함.. (기존 값 수정 가능)
+    // freeze()가 수정까지 못하게 막아주는 것.
   }
 
   setSaveStrategy(imageType: 'png' | 'jpg' | 'webp' | 'avif' | 'gif' | 'pdf') {
@@ -154,6 +174,10 @@ abstract class Grimpan {
     }
   }
 
+  invoke(command: Command) {
+    command.execute();
+  }
+
   setColor(color: string) {
     this.color = color;
   }
@@ -163,6 +187,22 @@ abstract class Grimpan {
     if (this.menu.colorBtn) {
       this.menu.colorBtn.value = color;
     }
+  }
+
+  // 필요없어졌지만 남겨둠
+  resetState() {
+    this.color = '#fff';
+    this.mode = new PenMode(this);
+    this.ctx.clearRect(0, 0, 300, 300);
+  }
+
+  restore(history: { mode: Mode; color: string; data: string }) {
+    const img = new Image();
+    img.addEventListener('load', () => {
+      this.ctx.clearRect(0, 0, 300, 300);
+      this.ctx.drawImage(img, 0, 0, 300, 300);
+    });
+    img.src = history.data;
   }
 
   abstract initialize(option: GrimpanOption): void;

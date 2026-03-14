@@ -12,6 +12,11 @@ class HistoryStack extends Array implements Clonable {
     return this.slice() as HistoryStack;
     // 위 경우는 운이 좋은 케이스. class별로 clone 메서드의 구현 난이도는 천차만별임.
   }
+
+  // saveHistory의 로직 수정을 위해 필요한 slice
+  override slice(start?: number, end?: number): HistoryStack {
+    return super.slice(start, end) as HistoryStack;
+  }
 }
 
 /**
@@ -35,6 +40,7 @@ class HistoryStack extends Array implements Clonable {
 export abstract class GrimpanHistory {
   grimpan: Grimpan;
   stack: HistoryStack;
+  index = -1;
 
   protected constructor(grimpan: Grimpan) {
     this.grimpan = grimpan;
@@ -46,6 +52,22 @@ export abstract class GrimpanHistory {
     });
   }
 
+  // caretaker(케어 테이커)
+  saveHistory() {
+    const snapshot = this.grimpan.makeSnapshot();
+    if (this.index === this.stack.length - 1) {
+      this.stack.push(snapshot);
+      this.index++;
+    } else {
+      // 뒤로가기를 몇 번 한 상황
+      this.stack = this.stack.slice(0, this.index + 1);
+      this.stack.push(snapshot);
+      this.index++;
+    }
+    (document.querySelector('#back-btn') as HTMLButtonElement).disabled = false;
+    (document.querySelector('#forward-btn') as HTMLButtonElement).disabled = true;
+  }
+
   afterSaveComplete() {
     console.log('history: save completed');
   }
@@ -55,8 +77,37 @@ export abstract class GrimpanHistory {
     SubscriptionManager.getInstance().unsubscribe('saveComplete', 'history');
   }
 
-  abstract undo(): void;
-  abstract redo(): void;
+  undoable() {
+    return this.index > 0;
+  }
+
+  redoable() {
+    return this.index < this.stack.length - 1;
+  }
+
+  undo(): void {
+    if (this.undoable()) {
+      this.index--;
+      (document.querySelector('#forward-btn') as HTMLButtonElement).disabled = false;
+    } else return;
+
+    if (!this.undoable()) {
+      (document.querySelector('#back-btn') as HTMLButtonElement).disabled = true;
+    }
+
+    this.grimpan.restore(this.stack[this.index]);
+  }
+  redo(): void {
+    if (this.redoable()) {
+      this.index++;
+      (document.querySelector('#back-btn') as HTMLButtonElement).disabled = false;
+    } else return;
+
+    if (!this.redoable()) {
+      (document.querySelector('#forward-btn') as HTMLButtonElement).disabled = true;
+    }
+    this.grimpan.restore(this.stack[this.index]);
+  }
 
   getStack() {
     return this.stack.clone(); // 가져올 때에도 clone을 활용.
@@ -66,16 +117,16 @@ export abstract class GrimpanHistory {
     this.stack = stack.clone();
   }
 
-  abstract initialize(): void;
+  initialize(): void {
+    // 버튼의 표시 처리
+    (document.querySelector('#back-btn') as HTMLButtonElement).disabled = true;
+    (document.querySelector('#forward-btn') as HTMLButtonElement).disabled = true;
+  }
   static getInstance(grimpan: Grimpan) {}
 }
 
 export class IEGrimpanHistory extends GrimpanHistory {
   private static instance: IEGrimpanHistory;
-  override initialize() {}
-
-  override undo(): void {}
-  override redo(): void {}
 
   static override getInstance(grimpan: IEGrimpan) {
     if (!this.instance) {
@@ -87,10 +138,6 @@ export class IEGrimpanHistory extends GrimpanHistory {
 
 export class ChromeGrimpanHistory extends GrimpanHistory {
   private static instance: ChromeGrimpanHistory;
-  override initialize() {}
-
-  override undo(): void {}
-  override redo(): void {}
 
   static override getInstance(grimpan: ChromeGrimpan) {
     if (!this.instance) {

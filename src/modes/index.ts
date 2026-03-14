@@ -1,9 +1,11 @@
 import {
   CircleSelectCommand,
+  Command,
   EraserSelectCommand,
   PenSelectCommand,
   PipetteSelectCommand,
   RectangleSelectCommand,
+  SaveHistoryCommand,
 } from '../Commands/index.js';
 import { Grimpan } from '../Factory/Grimpan.js';
 
@@ -27,6 +29,11 @@ export abstract class Mode {
   abstract mousedown(e: MouseEvent): void;
   abstract mousemove(e: MouseEvent): void;
   abstract mouseup(e: MouseEvent): void;
+
+  // 모든 커맨드의 실행을 이 invoker 함수에서 통제하기 위해 따로 둠.
+  invoke(command: Command) {
+    command.execute();
+  }
 }
 
 export class PenMode extends Mode {
@@ -51,8 +58,11 @@ export class PenMode extends Mode {
     this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
   }
   override mouseup(e: MouseEvent): void {
+    if (this.grimpan.active) {
+      // history 저장
+      this.invoke(new SaveHistoryCommand(this.grimpan));
+    }
     this.grimpan.active = false;
-    // TODO: history 저장
   }
 }
 export class EraserMode extends Mode {
@@ -77,8 +87,11 @@ export class EraserMode extends Mode {
     this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
   }
   override mouseup(e: MouseEvent): void {
+    if (this.grimpan.active) {
+      // history 저장
+      this.invoke(new SaveHistoryCommand(this.grimpan));
+    }
     this.grimpan.active = false;
-    // TODO: history 저장
   }
 }
 export class PipetteMode extends Mode {
@@ -107,9 +120,17 @@ export class RectangleMode extends Mode {
     grimpan.menu.executeCommand(new RectangleSelectCommand(grimpan));
   }
 
-  override mousedown(e: MouseEvent): void {}
+  override mousedown(e: MouseEvent): void {
+    this.grimpan.active = true;
+  }
   override mousemove(e: MouseEvent): void {}
-  override mouseup(e: MouseEvent): void {}
+  override mouseup(e: MouseEvent): void {
+    if (this.grimpan.active) {
+      // history 저장
+      this.invoke(new SaveHistoryCommand(this.grimpan));
+    }
+    this.grimpan.active = false;
+  }
 }
 export class CircleMode extends Mode {
   constructor(grimpan: Grimpan) {
@@ -117,7 +138,15 @@ export class CircleMode extends Mode {
     grimpan.menu.executeCommand(new CircleSelectCommand(grimpan));
   }
 
-  override mousedown(e: MouseEvent): void {}
+  override mousedown(e: MouseEvent): void {
+    this.grimpan.active = true;
+  }
   override mousemove(e: MouseEvent): void {}
-  override mouseup(e: MouseEvent): void {}
+  override mouseup(e: MouseEvent): void {
+    if (this.grimpan.active) {
+      // history 저장
+      this.invoke(new SaveHistoryCommand(this.grimpan));
+    }
+    this.grimpan.active = false;
+  }
 }

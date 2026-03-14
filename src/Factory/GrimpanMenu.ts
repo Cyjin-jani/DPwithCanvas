@@ -1,5 +1,12 @@
 import { GrimPanMenuInput, GrimPanMenuBtn, GrimPanMenuSaveBtn } from '../Builder/GrimpanMenuBtn.js';
-import { BackCommand, PenSelectCommand, Command, SaveCommand } from '../Commands/index.js';
+import {
+  BackCommand,
+  PenSelectCommand,
+  Command,
+  SaveCommand,
+  ForwardCommand,
+  SaveHistoryCommand,
+} from '../Commands/index.js';
 import { SubscriptionManager } from '../Observer.js';
 import type { ChromeGrimpan, GrimpanMode, IEGrimpan } from './Grimpan.js';
 import type { Grimpan } from './Grimpan.js';
@@ -77,6 +84,8 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
     this.grimpan.setMode('pen');
+    // 초기 그림판 히스토리 세팅
+    this.executeCommand(new SaveHistoryCommand(this.grimpan));
   }
 
   onSave() {
@@ -90,6 +99,10 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
     // 똑같은 코드로 조건 분기처리를 작성해서 execute 여부를 관리해야 함.
     // 다만 위와 같이 invoker 함수로 두면? executeCommand 함수 안에서 한번에 처리할 수 있음.
     this.executeCommand(new BackCommand(this.grimpan.history));
+  }
+
+  onClickForward() {
+    this.executeCommand(new ForwardCommand(this.grimpan.history));
   }
 
   onClickPen() {
@@ -122,7 +135,9 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         return btn;
       }
       case 'forward': {
-        const btn = new GrimPanMenuBtn.Builder(this, '앞으로', type).build();
+        const btn = new GrimPanMenuBtn.Builder(this, '앞으로', type)
+          .setOnClick(this.onClickForward.bind(this))
+          .build();
         btn.draw();
         return btn;
       }

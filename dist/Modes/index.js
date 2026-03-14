@@ -1,4 +1,4 @@
-import { CircleSelectCommand, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, RectangleSelectCommand, } from '../Commands/index.js';
+import { CircleSelectCommand, Command, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, RectangleSelectCommand, SaveHistoryCommand, } from '../Commands/index.js';
 import { Grimpan } from '../Factory/Grimpan.js';
 const convertToHex = (color) => {
     if (color < 0)
@@ -18,6 +18,10 @@ export class Mode {
     grimpan;
     constructor(grimpan) {
         this.grimpan = grimpan;
+    }
+    // 모든 커맨드의 실행을 이 invoker 함수에서 통제하기 위해 따로 둠.
+    invoke(command) {
+        command.execute();
     }
 }
 export class PenMode extends Mode {
@@ -42,8 +46,11 @@ export class PenMode extends Mode {
         this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
     }
     mouseup(e) {
+        if (this.grimpan.active) {
+            // history 저장
+            this.invoke(new SaveHistoryCommand(this.grimpan));
+        }
         this.grimpan.active = false;
-        // TODO: history 저장
     }
 }
 export class EraserMode extends Mode {
@@ -68,8 +75,11 @@ export class EraserMode extends Mode {
         this.grimpan.ctx.moveTo(e.offsetX, e.offsetY);
     }
     mouseup(e) {
+        if (this.grimpan.active) {
+            // history 저장
+            this.invoke(new SaveHistoryCommand(this.grimpan));
+        }
         this.grimpan.active = false;
-        // TODO: history 저장
     }
 }
 export class PipetteMode extends Mode {
@@ -97,16 +107,32 @@ export class RectangleMode extends Mode {
         super(grimpan);
         grimpan.menu.executeCommand(new RectangleSelectCommand(grimpan));
     }
-    mousedown(e) { }
+    mousedown(e) {
+        this.grimpan.active = true;
+    }
     mousemove(e) { }
-    mouseup(e) { }
+    mouseup(e) {
+        if (this.grimpan.active) {
+            // history 저장
+            this.invoke(new SaveHistoryCommand(this.grimpan));
+        }
+        this.grimpan.active = false;
+    }
 }
 export class CircleMode extends Mode {
     constructor(grimpan) {
         super(grimpan);
         grimpan.menu.executeCommand(new CircleSelectCommand(grimpan));
     }
-    mousedown(e) { }
+    mousedown(e) {
+        this.grimpan.active = true;
+    }
     mousemove(e) { }
-    mouseup(e) { }
+    mouseup(e) {
+        if (this.grimpan.active) {
+            // history 저장
+            this.invoke(new SaveHistoryCommand(this.grimpan));
+        }
+        this.grimpan.active = false;
+    }
 }

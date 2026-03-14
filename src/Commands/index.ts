@@ -29,10 +29,6 @@ export class ForwardCommand extends Command {
   }
 
   override execute(): void {
-    // 뒤로가기 구현
-    // 여기서 바로 비즈니스 로직을 구현하지 않고, 아래와 같이 history의 함수를 호출해서 처리한다면?
-    // 그것이 바로 receiver(수신자)의 역할임.
-    // this.grimpan.history.goBack(); // 다만 이런식의 receiver가 필수는 아님
     this.history.redo(); // receiver에게 로직 전송
   }
 }
@@ -110,5 +106,18 @@ export class SaveCommand extends Command {
 
   override execute(): void {
     this.grimpan.saveStrategy();
+  }
+}
+
+export class SaveHistoryCommand extends Command {
+  name = 'saveHistory';
+
+  constructor(private grimpan: Grimpan) {
+    super();
+  }
+
+  override execute(): void {
+    // 그리기 끝난 후 현재 상태 저장
+    this.grimpan.history.saveHistory();
   }
 }

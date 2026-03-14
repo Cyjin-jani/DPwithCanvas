@@ -8,6 +8,10 @@ class HistoryStack extends Array {
         return this.slice();
         // 위 경우는 운이 좋은 케이스. class별로 clone 메서드의 구현 난이도는 천차만별임.
     }
+    // saveHistory의 로직 수정을 위해 필요한 slice
+    slice(start, end) {
+        return super.slice(start, end);
+    }
 }
 /**
  * 프로토타입의 목적
@@ -29,6 +33,7 @@ class HistoryStack extends Array {
 export class GrimpanHistory {
     grimpan;
     stack;
+    index = -1;
     constructor(grimpan) {
         this.grimpan = grimpan;
         this.stack = new HistoryStack();
@@ -38,6 +43,22 @@ export class GrimpanHistory {
             publish: this.afterSaveComplete.bind(this),
         });
     }
+    // caretaker(케어 테이커)
+    saveHistory() {
+        const snapshot = this.grimpan.makeSnapshot();
+        if (this.index === this.stack.length - 1) {
+            this.stack.push(snapshot);
+            this.index++;
+        }
+        else {
+            // 뒤로가기를 몇 번 한 상황
+            this.stack = this.stack.slice(0, this.index + 1);
+            this.stack.push(snapshot);
+            this.index++;
+        }
+        document.querySelector('#back-btn').disabled = false;
+        document.querySelector('#forward-btn').disabled = true;
+    }
     afterSaveComplete() {
         console.log('history: save completed');
     }
@@ -45,19 +66,51 @@ export class GrimpanHistory {
     cancelSaveCompleteAlarm() {
         SubscriptionManager.getInstance().unsubscribe('saveComplete', 'history');
     }
+    undoable() {
+        return this.index > 0;
+    }
+    redoable() {
+        return this.index < this.stack.length - 1;
+    }
+    undo() {
+        if (this.undoable()) {
+            this.index--;
+            document.querySelector('#forward-btn').disabled = false;
+        }
+        else
+            return;
+        if (!this.undoable()) {
+            document.querySelector('#back-btn').disabled = true;
+        }
+        this.grimpan.restore(this.stack[this.index]);
+    }
+    redo() {
+        if (this.redoable()) {
+            this.index++;
+            document.querySelector('#back-btn').disabled = false;
+        }
+        else
+            return;
+        if (!this.redoable()) {
+            document.querySelector('#forward-btn').disabled = true;
+        }
+        this.grimpan.restore(this.stack[this.index]);
+    }
     getStack() {
         return this.stack.clone(); // 가져올 때에도 clone을 활용.
     }
     setStack(stack) {
         this.stack = stack.clone();
     }
+    initialize() {
+        // 버튼의 표시 처리
+        document.querySelector('#back-btn').disabled = true;
+        document.querySelector('#forward-btn').disabled = true;
+    }
     static getInstance(grimpan) { }
 }
 export class IEGrimpanHistory extends GrimpanHistory {
     static instance;
-    initialize() { }
-    undo() { }
-    redo() { }
     static getInstance(grimpan) {
         if (!this.instance) {
             this.instance = new IEGrimpanHistory(grimpan);
@@ -67,9 +120,6 @@ export class IEGrimpanHistory extends GrimpanHistory {
 }
 export class ChromeGrimpanHistory extends GrimpanHistory {
     static instance;
-    initialize() { }
-    undo() { }
-    redo() { }
     static getInstance(grimpan) {
         if (!this.instance) {
             this.instance = new ChromeGrimpanHistory(grimpan);
