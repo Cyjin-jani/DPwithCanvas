@@ -33,7 +33,38 @@ import type { GrimpanHistory } from '../Factory/GrimpanHistory.js';
 // 즉, 기존 코드를 변경하지 못하는 (어려운) 경우에 타입을 맞춰주는 것이 어댑터라는 패턴.
 
 export abstract class Command {
+  abstract name: string;
   abstract execute(): void;
+}
+
+// 데코레이터 패턴 (기존 클래스에 기능 추가하기.)
+// 아래와 같이 로거와 카운터가 필요함
+export const counter: { [key: string]: number } = {}; // 각각의 명령이 몇번 실행되었나.
+
+abstract class CommandDecorator {
+  name: string;
+  constructor(protected readonly command: Command) {
+    this.name = this.command.name;
+  }
+  abstract execute(): void;
+}
+
+class ExecuteLogger extends CommandDecorator {
+  override execute() {
+    console.log(this.command.name + '명령을 실행합니다.');
+    this.command.execute();
+  }
+
+  showLogger() {}
+}
+
+class ExecuteCounter extends CommandDecorator {
+  override execute() {
+    this.command.execute();
+    counter[this.command.name] = (counter[this.command.name] ?? 0) + 1;
+  }
+
+  additional() {}
 }
 
 export class BackCommand extends Command {
@@ -51,6 +82,13 @@ export class BackCommand extends Command {
     this.history.undo(); // receiver에게 로직 전송
   }
 }
+
+// 이런 식으로 데코레이터 패턴을 사용할 수 있음. (로깅과 카운터 로직을 포함하는 커맨드)
+// new ExecuteCounter(new ExecuteLogger(new BackCommand({} as any)));
+// 데코레이터 순서를 주의해야 함. 여기서는 로거 먼저 그리고 카운터라서 위와 같이 표현.
+// 모양이 기존 클래스와 같음. (name과 execute가 있는 형태.. 원본 클래스의 것들을 가지고 있음)
+// 완벽하게 똑같은 경우는 프록시라고 이야기 함. 데코레이터의 경우에는 여러 추가적인 메서드나 기능 등을 추가할 수 있음. (additional, showLogger 같은.)
+// 책임 연쇄 패턴과 다른 점은, 중간에 멈출 수 없음. 책임연쇄 패턴은 중간에 handle이라는 걸 통해 멈추거나 지속할 수 있는데, 데코레이터는 따로 멈추는 과정이 없다.
 
 export class ForwardCommand extends Command {
   name = 'forward';
