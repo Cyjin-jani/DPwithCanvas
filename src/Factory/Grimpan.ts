@@ -228,6 +228,15 @@ class ChromeGrimpan extends Grimpan {
     this.history = factory.createGrimpanHistory(this);
   }
 
+  // 이 initialize도 사실 퍼사드 패턴임.
+  // 이 함수 내부는 복잡한 구조를 띄고 있으나, 실제 사용되는 index.ts를 보면 아주 단순하게 사용함.
+  // 어떤 함수 내부에서 여러 함수를 호출하여 사용하고 있으면 그거시 곧 퍼사드 패턴..
+  // 단점은, 단일책임 원칙을 위반할 가능성이 높아짐.
+  /**
+   예시: grimpan.initialize({
+          menu: ['back', 'forward', 'color', 'pipette', 'pen', 'circle', 'rectangle', 'eraser', 'save'],
+        });
+   */
   initialize(option: GrimpanOption) {
     this.menu.initialize(option.menu);
     this.history.initialize();

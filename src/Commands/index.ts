@@ -1,6 +1,37 @@
 import type { Grimpan } from '../Factory/Grimpan.js';
 import type { GrimpanHistory } from '../Factory/GrimpanHistory.js';
 
+/**
+ * 어댑터 패턴
+ * 두 개의 인터페이스가 있는데, 그 둘이 서로 호환이 안되는 상황에서, 그 두 인터페이스를 호환되게 중간에서 처리하는 역할임
+ * 아래 예시 참고
+ */
+
+// export class Invoker {
+//   constructor(private readonly command: { run(): void }) {}
+
+//   invoke() {
+//     this.command.run();
+//   }
+// }
+
+// Invoker와 Command가 통신해야 하는데, 서로 run - execute로 다른 상황. (호환이 안되는 상황)
+// new Invoker(new BackCommand({} as any)); run이 없고 execute가 있어서 이렇게 쓸 수 없음.
+// 이때 어댑터를 사용할 수 있음.
+
+// export class Adapter {
+//   constructor(private readonly command: Command) {}
+//   run() {
+//     this.command.execute();
+//   }
+// }
+// new Invoker(new Adapter(new BackCommand({} as any))); // 이렇게 Adapter로 감싸주면 문제가 해결됨.
+// invoker 그냥 수정하면 되지 않나? 할 수 있음. 맞음.
+// 그래서, 이렇게 수정 가능하면 걍 invoker를 수정해서 쓰면 됨
+// 문제는, 두 개의 인터페이스가 다 남의 코드라면? (npm 라이브러리들)
+// 그 때에는 라이브러리 소스코드 수정이 어려우니 어댑터를 만들어서 사용해야 함.
+// 즉, 기존 코드를 변경하지 못하는 (어려운) 경우에 타입을 맞춰주는 것이 어댑터라는 패턴.
+
 export abstract class Command {
   abstract execute(): void;
 }
