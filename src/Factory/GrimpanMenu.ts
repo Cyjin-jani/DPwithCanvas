@@ -1,13 +1,13 @@
 import { GrimPanMenuInput, GrimPanMenuBtn, GrimPanMenuSaveBtn } from '../Builder/GrimpanMenuBtn.js';
 import {
   BackCommand,
-  PenSelectCommand,
   Command,
   SaveCommand,
   ForwardCommand,
   SaveHistoryCommand,
 } from '../Commands/index.js';
 import { SubscriptionManager } from '../Observer.js';
+import { ChromeMenuDrawVisitor, MenuDrawVisitor } from '../Visitor/MenuDrawVisitor.js';
 import type { ChromeGrimpan, GrimpanMode, IEGrimpan } from './Grimpan.js';
 import type { Grimpan } from './Grimpan.js';
 
@@ -15,6 +15,7 @@ export abstract class GrimpanMenu {
   grimpan: Grimpan;
   dom: HTMLElement;
   colorBtn!: HTMLInputElement;
+  menuDrawVisitor!: MenuDrawVisitor;
 
   protected constructor(grimpan: Grimpan, dom: HTMLElement) {
     this.grimpan = grimpan;
@@ -81,8 +82,19 @@ export type BtnType =
   | 'save';
 export class ChromeGrimpanMenu extends GrimpanMenu {
   private static instance: ChromeGrimpanMenu;
+
+  // initialize에서 하면 강결합이 되므로, 여기서 menuDrawVisitor를 처리함.
+  constructor(grimpan: Grimpan, dom: HTMLElement, menuDrawVisitor = new ChromeMenuDrawVisitor()) {
+    super(grimpan, dom);
+    this.menuDrawVisitor = menuDrawVisitor;
+  }
+
   override initialize(types: BtnType[]): void {
-    types.forEach(this.drawButtonByType.bind(this));
+    // visitor 패턴을 활용하여 draw를 넣어줌.
+    types.forEach((type) => {
+      const btn = this.drawButtonByType.bind(this)(type);
+      btn.draw(this.menuDrawVisitor);
+    });
     this.grimpan.setMode('pen');
     // 초기 그림판 히스토리 세팅
     this.executeCommand(new SaveHistoryCommand(this.grimpan));
@@ -131,14 +143,12 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '뒤로', type)
           .setOnClick(this.onClickBack.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
       case 'forward': {
         const btn = new GrimPanMenuBtn.Builder(this, '앞으로', type)
           .setOnClick(this.onClickForward.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -150,7 +160,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
             }
           })
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -158,7 +167,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '스포이트', type)
           .setOnClick(this.onClickPipette.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -166,7 +174,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '펜', type)
           .setOnClick(this.onClickPen.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -174,7 +181,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '원', type)
           .setOnClick(this.onClickCircle.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -182,7 +188,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '사각형', type)
           .setOnClick(this.onClickRectangle.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -190,7 +195,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
         const btn = new GrimPanMenuBtn.Builder(this, '지우개', type)
           .setOnClick(this.onClickEraser.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -209,7 +213,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
             },
           })
           .build();
-        btn.draw();
         return btn;
       }
     }

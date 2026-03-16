@@ -1,10 +1,12 @@
 import { GrimPanMenuInput, GrimPanMenuBtn, GrimPanMenuSaveBtn } from '../Builder/GrimpanMenuBtn.js';
-import { BackCommand, PenSelectCommand, Command, SaveCommand, ForwardCommand, SaveHistoryCommand, } from '../Commands/index.js';
+import { BackCommand, Command, SaveCommand, ForwardCommand, SaveHistoryCommand, } from '../Commands/index.js';
 import { SubscriptionManager } from '../Observer.js';
+import { ChromeMenuDrawVisitor, MenuDrawVisitor } from '../Visitor/MenuDrawVisitor.js';
 export class GrimpanMenu {
     grimpan;
     dom;
     colorBtn;
+    menuDrawVisitor;
     constructor(grimpan, dom) {
         this.grimpan = grimpan;
         this.dom = dom;
@@ -51,8 +53,17 @@ export class IEGrimpanMenu extends GrimpanMenu {
 }
 export class ChromeGrimpanMenu extends GrimpanMenu {
     static instance;
+    // initialize에서 하면 강결합이 되므로, 여기서 menuDrawVisitor를 처리함.
+    constructor(grimpan, dom, menuDrawVisitor = new ChromeMenuDrawVisitor()) {
+        super(grimpan, dom);
+        this.menuDrawVisitor = menuDrawVisitor;
+    }
     initialize(types) {
-        types.forEach(this.drawButtonByType.bind(this));
+        // visitor 패턴을 활용하여 draw를 넣어줌.
+        types.forEach((type) => {
+            const btn = this.drawButtonByType.bind(this)(type);
+            btn.draw(this.menuDrawVisitor);
+        });
         this.grimpan.setMode('pen');
         // 초기 그림판 히스토리 세팅
         this.executeCommand(new SaveHistoryCommand(this.grimpan));
@@ -92,14 +103,12 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
                 const btn = new GrimPanMenuBtn.Builder(this, '뒤로', type)
                     .setOnClick(this.onClickBack.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'forward': {
                 const btn = new GrimPanMenuBtn.Builder(this, '앞으로', type)
                     .setOnClick(this.onClickForward.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'color': {
@@ -110,42 +119,36 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
                     }
                 })
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'pipette': {
                 const btn = new GrimPanMenuBtn.Builder(this, '스포이트', type)
                     .setOnClick(this.onClickPipette.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'pen': {
                 const btn = new GrimPanMenuBtn.Builder(this, '펜', type)
                     .setOnClick(this.onClickPen.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'circle': {
                 const btn = new GrimPanMenuBtn.Builder(this, '원', type)
                     .setOnClick(this.onClickCircle.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'rectangle': {
                 const btn = new GrimPanMenuBtn.Builder(this, '사각형', type)
                     .setOnClick(this.onClickRectangle.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'eraser': {
                 const btn = new GrimPanMenuBtn.Builder(this, '지우개', type)
                     .setOnClick(this.onClickEraser.bind(this))
                     .build();
-                btn.draw();
                 return btn;
             }
             case 'save': {
@@ -163,7 +166,6 @@ export class ChromeGrimpanMenu extends GrimpanMenu {
                     },
                 })
                     .build();
-                btn.draw();
                 return btn;
             }
         }
