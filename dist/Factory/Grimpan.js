@@ -17,6 +17,7 @@ class Grimpan {
         invert: false,
         grayscale: false,
     };
+    isPremium = false;
     constructor(canvas, factory) {
         if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
             throw new Error('canvas 엘레먼트를 넣어주세요.');

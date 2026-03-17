@@ -184,12 +184,37 @@ export class EraserSelectCommand extends Command {
         this.grimpan.menu.setActiveBtn('eraser');
     }
 }
+export class PremiumCommandProxy {
+    command;
+    // 프록시는 원본이랑 모양이 똑같아야 함.
+    name;
+    // 다만, 다른점은 constructor에서 proxy를 할 커맨드 자체를 받음
+    constructor(command) {
+        this.command = command;
+        this.name = command.name;
+    }
+    execute() {
+        // 이런 식으로 지연 초기화를 해줄 수도 있음.
+        // if (!this.command.loaded) {
+        //     this.command.load()
+        // }
+        if (this.command.grimpan.isPremium) {
+            this.command.execute();
+        }
+        else {
+            alert('프리미엄 이용자만 이용 가능합니다.');
+        }
+    }
+}
 export class CircleSelectCommand extends Command {
     grimpan;
     name = 'circleSelect';
     constructor(grimpan) {
         super();
         this.grimpan = grimpan;
+    }
+    load() {
+        // 무거운 작업
     }
     execute() {
         // circle 로직 구현
@@ -202,6 +227,9 @@ export class RectangleSelectCommand extends Command {
     constructor(grimpan) {
         super();
         this.grimpan = grimpan;
+    }
+    load() {
+        // 무거운 작업
     }
     execute() {
         // rectangle 로직 구현

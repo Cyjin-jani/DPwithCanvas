@@ -161,11 +161,45 @@ export class EraserSelectCommand extends Command {
   }
 }
 
-export class CircleSelectCommand extends Command {
+// 프록시 패턴 (프록시: 대리인이라는 뜻)
+// 어떤 액션 등에 대한 접근 제어를 구현할 때 주로 사용. 프록시 패턴을 쓰는 곳에서 데코레이터 패턴을 사용할수도 있음.
+// 객체 자신이 스스로 액션을 하기 때문에, 클라이언트에서 신경을 써주지 않아도 됨.
+
+interface ISelectCommand {
+  grimpan: Grimpan;
+  name: string;
+  execute(): void;
+}
+export class PremiumCommandProxy {
+  // 프록시는 원본이랑 모양이 똑같아야 함.
+  name: string;
+  // 다만, 다른점은 constructor에서 proxy를 할 커맨드 자체를 받음
+  constructor(private readonly command: ISelectCommand) {
+    this.name = command.name;
+  }
+
+  execute(): void {
+    // 이런 식으로 지연 초기화를 해줄 수도 있음.
+    // if (!this.command.loaded) {
+    //     this.command.load()
+    // }
+
+    if (this.command.grimpan.isPremium) {
+      this.command.execute();
+    } else {
+      alert('프리미엄 이용자만 이용 가능합니다.');
+    }
+  }
+}
+export class CircleSelectCommand extends Command implements ISelectCommand {
   name = 'circleSelect';
 
-  constructor(private grimpan: Grimpan) {
+  constructor(public grimpan: Grimpan) {
     super();
+  }
+
+  load() {
+    // 무거운 작업
   }
 
   override execute(): void {
@@ -173,11 +207,15 @@ export class CircleSelectCommand extends Command {
     this.grimpan.menu.setActiveBtn('circle');
   }
 }
-export class RectangleSelectCommand extends Command {
+export class RectangleSelectCommand extends Command implements ISelectCommand {
   name = 'rectangleSelect';
 
-  constructor(private grimpan: Grimpan) {
+  constructor(public grimpan: Grimpan) {
     super();
+  }
+
+  load() {
+    // 무거운 작업
   }
 
   override execute(): void {

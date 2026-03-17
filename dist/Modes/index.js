@@ -1,4 +1,4 @@
-import { CircleSelectCommand, Command, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, RectangleSelectCommand, SaveHistoryCommand, } from '../Commands/index.js';
+import { CircleSelectCommand, Command, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, PremiumCommandProxy, RectangleSelectCommand, SaveHistoryCommand, } from '../Commands/index.js';
 import { Grimpan } from '../Factory/Grimpan.js';
 const convertToHex = (color) => {
     if (color < 0)
@@ -105,7 +105,7 @@ export class PipetteMode extends Mode {
 export class RectangleMode extends Mode {
     constructor(grimpan) {
         super(grimpan);
-        grimpan.menu.executeCommand(new RectangleSelectCommand(grimpan));
+        grimpan.menu.executeCommand(new PremiumCommandProxy(new RectangleSelectCommand(grimpan)));
     }
     mousedown(e) {
         this.grimpan.active = true;
@@ -122,7 +122,8 @@ export class RectangleMode extends Mode {
 export class CircleMode extends Mode {
     constructor(grimpan) {
         super(grimpan);
-        grimpan.menu.executeCommand(new CircleSelectCommand(grimpan));
+        // 기존 코드를 수정하지 않고, proxy 패턴을 이용하여 프리미엄 유저만 사용하도록 접근제어를 할 수가 있음.
+        grimpan.menu.executeCommand(new PremiumCommandProxy(new CircleSelectCommand(grimpan)));
     }
     mousedown(e) {
         this.grimpan.active = true;

@@ -37,6 +37,7 @@ abstract class Grimpan {
     invert: false,
     grayscale: false,
   };
+  isPremium = false;
 
   protected constructor(canvas: HTMLCanvasElement | null, factory: AbstractGrimpanFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
