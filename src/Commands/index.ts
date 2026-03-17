@@ -41,32 +41,65 @@ export abstract class Command {
 // 아래와 같이 로거와 카운터가 필요함
 export const counter: { [key: string]: number } = {}; // 각각의 명령이 몇번 실행되었나.
 
-abstract class CommandDecorator {
-  name: string;
-  constructor(protected readonly command: Command) {
-    this.name = this.command.name;
-  }
-  abstract execute(): void;
+// abstract class CommandDecorator {
+//   name: string;
+//   constructor(protected readonly command: Command) {
+//     this.name = this.command.name;
+//   }
+//   abstract execute(): void;
+// }
+
+// class ExecuteLogger extends CommandDecorator {
+//   override execute() {
+//     console.log(this.command.name + '명령을 실행합니다.');
+//     this.command.execute();
+//   }
+
+//   showLogger() {}
+// }
+
+// class ExecuteCounter extends CommandDecorator {
+//   override execute() {
+//     this.command.execute();
+//     counter[this.command.name] = (counter[this.command.name] ?? 0) + 1;
+//   }
+
+//   additional() {}
+// }
+
+// JS데코레이터 (믹스인 패턴)
+// 아래 함수같은 형태가 믹스인 패턴임.
+// 함수가 class를 받아서, 그 class를 상속한 자식 class를 return하는 패턴.
+// 데코레이터 패턴처럼, 추가적인 메서드를 class 내에 넣어줄 수도 있음.
+// 상속을 통해서 기존 기능 확장이나, 신규 메서드 추가 등이 가능함.
+function countMixin(value: typeof BackCommand, context: ClassDecoratorContext) {
+  // context의 타입은 class에 붙이냐, method에 붙이냐 등에 따라 달라짐.
+  // value라는 건, decorator를 붙인 대상이 됨.
+  // 아래의 경우, BackCommand가 value가 되는 것.
+
+  // 익명 class를 return해줌.
+  return class extends value {
+    override execute() {
+      super.execute(); // 원본
+      counter[this.name] = (counter[this.name] ?? 0) + 1;
+    }
+    additional() {}
+  };
 }
 
-class ExecuteLogger extends CommandDecorator {
-  override execute() {
-    console.log(this.command.name + '명령을 실행합니다.');
-    this.command.execute();
-  }
+function loggerMixin(value: typeof BackCommand, context: ClassDecoratorContext) {
+  return class extends value {
+    override execute() {
+      console.log(this.name + '명령을 실행합니다.');
+      super.execute(); // 원본
+    }
 
-  showLogger() {}
+    logging() {}
+  };
 }
 
-class ExecuteCounter extends CommandDecorator {
-  override execute() {
-    this.command.execute();
-    counter[this.command.name] = (counter[this.command.name] ?? 0) + 1;
-  }
-
-  additional() {}
-}
-
+@countMixin
+@loggerMixin
 export class BackCommand extends Command {
   name = 'back';
 
