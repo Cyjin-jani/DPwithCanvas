@@ -198,7 +198,8 @@ export class PremiumCommandProxy {
         // if (!this.command.loaded) {
         //     this.command.load()
         // }
-        if (this.command.grimpan.isPremium) {
+        //! 구현을 위해서 잠시 해제해둠 ()
+        if (!this.command.grimpan.isPremium) {
             this.command.execute();
         }
         else {

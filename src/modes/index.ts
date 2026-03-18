@@ -116,6 +116,12 @@ export class PipetteMode extends Mode {
   }
 }
 export class RectangleMode extends Mode {
+  startX?: number | undefined;
+  startY?: number | undefined;
+  endX?: number | undefined;
+  endY?: number | undefined;
+  imageData?: ImageData | undefined;
+
   constructor(grimpan: Grimpan) {
     super(grimpan);
     grimpan.menu.executeCommand(new PremiumCommandProxy(new RectangleSelectCommand(grimpan)));
@@ -123,17 +129,55 @@ export class RectangleMode extends Mode {
 
   override mousedown(e: MouseEvent): void {
     this.grimpan.active = true;
+    this.startX = e.offsetX;
+    this.startY = e.offsetY;
+    this.imageData = this.grimpan.ctx.getImageData(0, 0, 300, 300);
   }
-  override mousemove(e: MouseEvent): void {}
+  override mousemove(e: MouseEvent): void {
+    this.endX = e.offsetX;
+    this.endY = e.offsetY;
+    // 캔버스 리셋
+    if (this.imageData) {
+      this.grimpan.ctx.putImageData(this.imageData!, 0, 0);
+    }
+    this.grimpan.ctx.lineWidth = 1;
+    this.grimpan.ctx.lineCap = 'round';
+    this.grimpan.ctx.strokeStyle = this.grimpan.color;
+    this.grimpan.ctx.globalCompositeOperation = 'source-over';
+    const width = this.endX! - this.startX!;
+    const height = this.endY! - this.startY!;
+    this.grimpan.ctx.beginPath();
+    this.grimpan.ctx.rect(this.startX!, this.startY!, width, height);
+    this.grimpan.ctx.stroke(); // 이걸 해야 실제로 선이 그어짐.
+  }
   override mouseup(e: MouseEvent): void {
     if (this.grimpan.active) {
+      this.grimpan.ctx.lineWidth = 1;
+      this.grimpan.ctx.lineCap = 'round';
+      this.grimpan.ctx.strokeStyle = this.grimpan.color;
+      this.grimpan.ctx.globalCompositeOperation = 'source-over';
+      const width = this.endX! - this.startX!;
+      const height = this.endY! - this.startY!;
+      this.grimpan.ctx.beginPath();
+      this.grimpan.ctx.rect(this.startX!, this.startY!, width, height);
+      this.grimpan.ctx.stroke(); // 이걸 해야 실제로 선이 그어짐.
+
       // history 저장
       this.invoke(new SaveHistoryCommand(this.grimpan));
+      this.startX = undefined;
+      this.startY = undefined;
+      this.imageData = undefined;
     }
     this.grimpan.active = false;
   }
 }
 export class CircleMode extends Mode {
+  startX?: number | undefined;
+  startY?: number | undefined;
+  endX?: number | undefined;
+  endY?: number | undefined;
+  imageData?: ImageData | undefined;
+
   constructor(grimpan: Grimpan) {
     super(grimpan);
     // 기존 코드를 수정하지 않고, proxy 패턴을 이용하여 프리미엄 유저만 사용하도록 접근제어를 할 수가 있음.
@@ -142,12 +186,47 @@ export class CircleMode extends Mode {
 
   override mousedown(e: MouseEvent): void {
     this.grimpan.active = true;
+    this.grimpan.active = true;
+    this.startX = e.offsetX;
+    this.startY = e.offsetY;
+    this.imageData = this.grimpan.ctx.getImageData(0, 0, 300, 300);
   }
-  override mousemove(e: MouseEvent): void {}
+  override mousemove(e: MouseEvent): void {
+    this.endX = e.offsetX;
+    this.endY = e.offsetY;
+    // 캔버스 리셋
+    if (this.imageData) {
+      this.grimpan.ctx.putImageData(this.imageData!, 0, 0);
+    }
+    this.grimpan.ctx.lineWidth = 1;
+    this.grimpan.ctx.lineCap = 'round';
+    this.grimpan.ctx.strokeStyle = this.grimpan.color;
+    this.grimpan.ctx.globalCompositeOperation = 'source-over';
+    const width = this.endX! - this.startX!;
+    const height = this.endY! - this.startY!;
+    const radius = Math.hypot(width, height); // 피타고라스 정리처럼 해서 radius 값을 얻어낼 수 있음.
+    this.grimpan.ctx.beginPath();
+    this.grimpan.ctx.arc(this.startX!, this.startY!, radius, 0, Math.PI * 2);
+    this.grimpan.ctx.stroke(); // 이걸 해야 실제로 선이 그어짐.
+  }
   override mouseup(e: MouseEvent): void {
     if (this.grimpan.active) {
+      this.grimpan.ctx.lineWidth = 1;
+      this.grimpan.ctx.lineCap = 'round';
+      this.grimpan.ctx.strokeStyle = this.grimpan.color;
+      this.grimpan.ctx.globalCompositeOperation = 'source-over';
+      const width = this.endX! - this.startX!;
+      const height = this.endY! - this.startY!;
+      const radius = Math.hypot(width, height);
+      this.grimpan.ctx.beginPath();
+      this.grimpan.ctx.arc(this.startX!, this.startY!, radius, 0, Math.PI * 2);
+      this.grimpan.ctx.stroke();
+
       // history 저장
       this.invoke(new SaveHistoryCommand(this.grimpan));
+      this.startX = undefined;
+      this.startY = undefined;
+      this.imageData = undefined;
     }
     this.grimpan.active = false;
   }

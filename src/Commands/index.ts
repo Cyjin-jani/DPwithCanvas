@@ -184,7 +184,8 @@ export class PremiumCommandProxy {
     //     this.command.load()
     // }
 
-    if (this.command.grimpan.isPremium) {
+    //! 구현을 위해서 잠시 해제해둠 ()
+    if (!this.command.grimpan.isPremium) {
       this.command.execute();
     } else {
       alert('프리미엄 이용자만 이용 가능합니다.');
